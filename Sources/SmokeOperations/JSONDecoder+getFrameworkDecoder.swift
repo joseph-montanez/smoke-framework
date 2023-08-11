@@ -19,11 +19,22 @@ import Foundation
 
 private func createDecoder() -> JSONDecoder {
     let jsonDecoder = JSONDecoder()
-    if #available(OSX 10.12, *) || #available(iOS 10.0, *) {
+    
+#if os(iOS)
+    if #available(iOS 10.0, *) {
         jsonDecoder.dateDecodingStrategy = .iso8601
     } else {
-        // Fallback on earlier versions
+        // Fallback on earlier versions for iOS
     }
+#elseif os(macOS)
+    if #available(macOS 10.12, *) {
+        jsonDecoder.dateDecodingStrategy = .iso8601
+    } else {
+        // Fallback on earlier versions for macOS
+    }
+#else
+    // Handle other platforms if needed
+#endif
     
     return jsonDecoder
 }
