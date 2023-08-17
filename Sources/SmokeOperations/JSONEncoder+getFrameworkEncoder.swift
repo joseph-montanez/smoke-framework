@@ -23,13 +23,13 @@ private func createEncoder() -> JSONEncoder {
     
 #if os(iOS)
     if #available(iOS 10.0, *) {
-        jsonEncoder.dateDecodingStrategy = .iso8601
+        jsonEncoder.dateEncodingStrategy = .iso8601
     } else {
         // Fallback on earlier versions for iOS
     }
 #elseif os(macOS)
     if #available(macOS 10.12, *) {
-        jsonEncoder.dateDecodingStrategy = .iso8601
+        jsonEncoder.dateEncodingStrategy = .iso8601
     } else {
         // Fallback on earlier versions for macOS
     }
