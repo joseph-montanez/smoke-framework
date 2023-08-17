@@ -138,7 +138,9 @@ public class SmokeHTTP1Server {
         }
         
         self.quiesce = ServerQuiescingHelper(group: eventLoopGroup)
-        self.fullyShutdownPromise = eventLoopGroup.next().newPromise()
+        withExtendedLifetime(self.fullyShutdownPromise) {
+            self.fullyShutdownPromise = eventLoopGroup.next().newPromise()
+        }
         self.signalSource = newSignalSource?.0
         self.shutdownDispatchGroup = DispatchGroup()
         // enter the DispatchGroup during initialization so waiting for the
@@ -199,26 +201,24 @@ public class SmokeHTTP1Server {
         
         channel = try bootstrap.bind(host: ServerDefaults.defaultHost, port: port).wait()
         
-        withExtendedLifetime(fullyShutdownPromise) {
-            fullyShutdownPromise.futureResult.whenComplete { [unowned self] in
-                do {
-                    let shutdownCompletionHandlers = self.updateStateOnShutdownComplete()
-                    
-                    // execute all the completion handlers
-                    shutdownCompletionHandlers.forEach { self.shutdownCompletionHandlerInvocationStrategy.invoke(handler: $0) }
-                    
-                    if self.ownEventLoopGroup {
-                        try self.eventLoopGroup.syncShutdownGracefully()
-                    }
-                    
-                    // release any waiters for shutdown
-                    self.shutdownDispatchGroup.leave()
-                } catch {
-                    Log.error("Server unable to shutdown cleanly following full shutdown.")
+        fullyShutdownPromise.futureResult.whenComplete { [unowned self] in
+            do {
+                let shutdownCompletionHandlers = self.updateStateOnShutdownComplete()
+                
+                // execute all the completion handlers
+                shutdownCompletionHandlers.forEach { self.shutdownCompletionHandlerInvocationStrategy.invoke(handler: $0) }
+                
+                if self.ownEventLoopGroup {
+                    try self.eventLoopGroup.syncShutdownGracefully()
                 }
                 
-                Log.info("SmokeHTTP1Server shutdown.")
+                // release any waiters for shutdown
+                self.shutdownDispatchGroup.leave()
+            } catch {
+                Log.error("Server unable to shutdown cleanly following full shutdown.")
             }
+            
+            Log.info("SmokeHTTP1Server shutdown.")
         }
         
         Log.info("SmokeHTTP1Server started on port \(port).")
