@@ -12,11 +12,11 @@
       },
       {
         "package": "SmokeHTTP",
-        "repositoryURL": "https://github.com/amzn/smoke-http.git",
+        "repositoryURL": "https://github.com/joseph-montanez/smoke-http.git",
         "state": {
-          "branch": null,
+          "branch": "ios-9",
           "revision": "705553c6f59d15f8b9fe2fd458a0ad3755ef9bc4",
-          "version": "1.0.1"
+          "version": null
         }
       },
       {
