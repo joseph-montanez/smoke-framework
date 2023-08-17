@@ -31,6 +31,8 @@ public enum SmokeHTTP1ServerError: Error {
     case shutdownAttemptOnUnstartedServer
 }
 
+var fullyShutdownPromise: EventLoopPromise<Void>?
+
 /**
  A basic non-blocking HTTP server that handles a request with an
  optional body and returns a response with an optional body.
@@ -40,7 +42,6 @@ public class SmokeHTTP1Server {
     
     let quiesce: ServerQuiescingHelper
     let signalSource: DispatchSourceSignal?
-    let fullyShutdownPromise: EventLoopPromise<Void>
     let handler: HTTP1RequestHandler
     let invocationStrategy: InvocationStrategy
     var channel: Channel?
@@ -138,9 +139,7 @@ public class SmokeHTTP1Server {
         }
         
         self.quiesce = ServerQuiescingHelper(group: eventLoopGroup)
-        withExtendedLifetime(self.fullyShutdownPromise) {
-            self.fullyShutdownPromise = eventLoopGroup.next().newPromise()
-        }
+        fullyShutdownPromise = eventLoopGroup.next().newPromise()
         self.signalSource = newSignalSource?.0
         self.shutdownDispatchGroup = DispatchGroup()
         // enter the DispatchGroup during initialization so waiting for the
@@ -201,7 +200,7 @@ public class SmokeHTTP1Server {
         
         channel = try bootstrap.bind(host: ServerDefaults.defaultHost, port: port).wait()
         
-        fullyShutdownPromise.futureResult.whenComplete { [unowned self] in
+        fullyShutdownPromise?.futureResult.whenComplete { [unowned self] in
             do {
                 let shutdownCompletionHandlers = self.updateStateOnShutdownComplete()
                 
