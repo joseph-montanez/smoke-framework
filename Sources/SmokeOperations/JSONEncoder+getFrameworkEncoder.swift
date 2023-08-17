@@ -20,9 +20,22 @@ import LoggerAPI
 
 private func createEncoder() -> JSONEncoder {
     let jsonEncoder = JSONEncoder()
-    if #available(OSX 10.12, *) {
-        jsonEncoder.dateEncodingStrategy = .iso8601
+    
+#if os(iOS)
+    if #available(iOS 10.0, *) {
+        jsonEncoder.dateDecodingStrategy = .iso8601
+    } else {
+        // Fallback on earlier versions for iOS
     }
+#elseif os(macOS)
+    if #available(macOS 10.12, *) {
+        jsonEncoder.dateDecodingStrategy = .iso8601
+    } else {
+        // Fallback on earlier versions for macOS
+    }
+#else
+    // Handle other platforms if needed
+#endif
 
     jsonEncoder.outputFormatting = .prettyPrinted
     
